@@ -1,0 +1,67 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+    depends_on:
+      - redis
+    restart: always
+    labels: { logging: "promtail" }
+
+  redis:
+    image: redis:latest
+    container_name: redis-server
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "notice"]
+    restart: always
+
+  # prometheus:
+  #   image: prom/prometheus
+  #   volumes:
+  #     - ./config/prometheus.yaml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"
+
+  # grafana:
+  #   image: grafana/grafana
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - loki
+  #   volumes:
+  #     - ./config/grafana.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+
+  # loki:
+  #   image: grafana/loki:latest
+  #   container_name: loki
+  #   ports:
+  #     - "3100:3100"
+  #   volumes:
+  #     - ./config/loki.yaml:/etc/loki/loki.yaml
+  #     - ./data/loki:/loki
+  #   command: -config.file=/etc/loki/local-config.yaml
+
+  # promtail:
+  #   image: grafana/promtail:latest
+  #   container_name: promtail
+  #   command: -config.file=/etc/promtail/docker-config.yaml
+  #   volumes:
+  #     - ./configs/promtail.yaml:/etc/promtail/docker-config.yaml
+  #     - /var/lib/docker/containers:/var/lib/docker/containers:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   depends_on:
+  #     - loki
+
+volumes:
+  redis_data:
+    driver: local
