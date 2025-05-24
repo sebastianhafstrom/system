@@ -11,7 +11,8 @@ import (
 
 var client *redis.Client
 
-func InitRedis(ctx context.Context) {
+func init() {
+	ctx := context.Background()
 	redisAddr := os.Getenv("REDIS_ADDR")
 	redisPassword := os.Getenv("REDIS_PASSWORD")
 	redisDb, err := strconv.Atoi(os.Getenv("REDIS_DB"))

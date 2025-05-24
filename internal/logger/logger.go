@@ -7,14 +7,17 @@ import (
 
 var Logger *slog.Logger
 
-func Init() {
-	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
+func init() {
+	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: false,
 		Level:     slog.LevelDebug,
 	})
 
-	Logger = slog.New(handler).With("app", "SebSystem")
+	Logger = slog.New(handler)
 
 	slog.SetDefault(Logger)
-	Logger.Info("Logger with slog initialized")
+	Logger.Debug("Debug log")
+	Logger.Info("Info log")
+	Logger.Warn("Warn log")
+	Logger.Error("Error log")
 }

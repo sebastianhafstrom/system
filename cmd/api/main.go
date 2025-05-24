@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,9 +10,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sebastianhafstrom/system/internal/auth"
+	"github.com/sebastianhafstrom/system/internal/db"
 	"github.com/sebastianhafstrom/system/internal/logger"
-	redisclient "github.com/sebastianhafstrom/system/internal/redis"
-	"github.com/sebastianhafstrom/system/internal/service"
+	"github.com/sebastianhafstrom/system/internal/todo"
 	"github.com/sebastianhafstrom/system/internal/user"
 	"github.com/urfave/negroni/v3"
 )
@@ -40,7 +39,6 @@ var (
 func Foo(w http.ResponseWriter, r *http.Request) {
 	log := logger.Logger
 	log.Info("Hello world!")
-	service.ServiceFunc()
 	fmt.Fprintf(w, "Welcome to Foo!")
 }
 
@@ -227,14 +225,9 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "successfully logged out")
 }
 
-func log() {
-	for ok := true; ok; ok = true {
-		logger.Logger.Info("Hodwy")
-		time.Sleep(5 * time.Second)
-	}
-}
-
 func main() {
+	db := db.SetupDB()
+
 	router := mux.NewRouter()
 	router.HandleFunc("/foo", Foo).Methods("GET")
 	router.HandleFunc("/bar", Bar).Methods("GET")
@@ -249,21 +242,32 @@ func main() {
 	router.HandleFunc("/auth/refresh", RegisterHandler).Methods("POST")
 	router.HandleFunc("/auth/logout", LogoutHandler).Methods("POST")
 
+	router.HandleFunc("/todos", func(w http.ResponseWriter, r *http.Request) {
+		todo.ListTodos(w, r, db)
+
+	}).Methods("GET")
+	router.HandleFunc("/todos/{id}", func(w http.ResponseWriter, r *http.Request) {
+		todo.GetTodo(w, r, db)
+
+	}).Methods("GET")
+	router.HandleFunc("/todos", func(w http.ResponseWriter, r *http.Request) {
+		todo.CreateTodo(w, r, db)
+
+	}).Methods("POST")
+	router.HandleFunc("/todos/{id}", func(w http.ResponseWriter, r *http.Request) {
+		todo.DeleteTodo(w, r, db)
+
+	}).Methods("DELETE")
+
 	router.Handle("/metrics", promhttp.Handler())
 
 	n := negroni.Classic()
 	n.UseHandler(router)
 
-	go log()
-
 	n.Run(":8080")
 }
 
 func init() {
-	ctx := context.Background()
-	redisclient.InitRedis(ctx)
-	logger.Init()
-
 	// Register Prometheus metrics
 	prometheus.MustRegister(loginAttempts)
 	prometheus.MustRegister(requestDuration)

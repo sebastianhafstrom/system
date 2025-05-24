@@ -1,19 +1,11 @@
 package auth
 
 import (
-	"context"
 	"testing"
 	"time"
 
-	redisclient "github.com/sebastianhafstrom/system/internal/redis"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	ctx := context.Background()
-	// Initialize Redis for testing (a separate test database)
-	redisclient.InitRedis(ctx) // DB 1 for testing
-}
 
 func TestGenerateTokens(t *testing.T) {
 	access, refresh, err := GenerateJwt("testuser", "admin", "127.0.0.1", "TestAgent")

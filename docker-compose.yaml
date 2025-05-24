@@ -1,19 +1,19 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: app
-    ports:
-      - "8080:8080"
-    environment:
-      - REDIS_ADDR=redis:6379
-      - REDIS_PASSWORD=
-      - REDIS_DB=0
-    depends_on:
-      - redis
-    restart: always
-    labels: { logging: "promtail" }
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: app
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - REDIS_ADDR=redis:6379
+  #     - REDIS_PASSWORD=
+  #     - REDIS_DB=0
+  #   depends_on:
+  #     - redis
+  #   restart: always
+  #   labels: { logging: "promtail" }
 
   redis:
     image: redis:latest
@@ -23,6 +23,19 @@ services:
     volumes:
       - redis_data:/data
     command: ["redis-server", "--save", "60", "1", "--loglevel", "notice"]
+    restart: always
+
+  postgres:
+    image: postgres:latest
+    container_name: system-db-postgres
+    ports:
+      - "5400:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
     restart: always
 
   # prometheus:
